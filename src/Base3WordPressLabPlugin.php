@@ -2,12 +2,18 @@
 
 namespace Base3WordPressLab;
 
+use AssistantFoundation\Api\IAgentRuntimeRegistry;
+use AssistantFoundation\Api\IAgentRuntimeSelector;
+use AssistantRuntime\Service\PreferredAgentRuntimeSelector;
+use Base3\Accesscontrol\Api\IAccesscontrol;
 use Base3\Api\IClassMap;
+use Base3\Api\IModuleRegistry;
 use Base3\Api\IContainer;
 use Base3\Api\IPlugin;
 use Base3\Api\IBase;
 use Base3\Database\Api\IDatabase;
 use Base3\Migration\Api\IMigrationRunner;
+use Base3\Session\Api\ISession;
 use Base3\Migration\Database\DatabaseMigrationRunner;
 use Base3\Settings\Api\ISettingsStore;
 use Base3\Settings\Database\DatabaseSettingsStore;
@@ -16,6 +22,8 @@ use Base3\State\Database\DatabaseStateStore;
 use Base3\Translation\Api\ITranslation;
 use Base3WordPress\Api\IBase3WordPressSettings;
 use Base3WordPressLab\Service\Base3WordPressLabSettings;
+use MissionBay\Agent\GlobalAgentKnowledgeService;
+use MissionBay\Api\IAgentKnowledgeService;
 
 /** Example project composition, ported from the ILIAS lab responsibility. */
 final class Base3WordPressLabPlugin implements IPlugin, IBase {
@@ -31,6 +39,20 @@ final class Base3WordPressLabPlugin implements IPlugin, IBase {
 			->set(IStateStore::class, fn($c) => new DatabaseStateStore($c->get(IDatabase::class)), IContainer::SHARED)
 			->set(IMigrationRunner::class, fn($c) => new DatabaseMigrationRunner($c->get(IClassMap::class), $c->get(IDatabase::class)), IContainer::SHARED)
 			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class)), IContainer::SHARED);
+
+		// MissionBay is an optional BASE3 module. Only compose its services when installed.
+		if ($this->container->get(IModuleRegistry::class)->getModulePath('MissionBay') !== null) {
+			$this->container
+				->set(IAgentRuntimeSelector::class, fn($c) => new PreferredAgentRuntimeSelector(
+					$c->get(IAgentRuntimeRegistry::class),
+					'missionbay'
+				), IContainer::SHARED)
+				->set(IAgentKnowledgeService::class, fn($c) => new GlobalAgentKnowledgeService(
+					$c->get(IDatabase::class),
+					$c->get(IAccesscontrol::class),
+					$c->get(ISession::class)
+				), IContainer::SHARED);
+		}
 
 		// Keep the ILIAS lab behavior: user removal invalidates assistant conversation history.
 		add_action('deleted_user', function(int $userId): void {

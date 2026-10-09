@@ -30,7 +30,6 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 				['chatbotextensionsconfigdisplay', 'Extensions']
 			]),
 			$this->tab('provider', 'Provider', [
-				['aiservicedashboarddisplay', 'AI Services'],
 				['connectionconfigdisplay', 'Connections'],
 				['llmconfigdisplay', 'LLMs'],
 				['embeddingconfigdisplay', 'Embeddings'],
@@ -79,6 +78,18 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 				['datahawkmaterializationtabledisplay', 'Tables']
 			]),
 			$this->tab('aiusage', 'AI Usage', [
+				['ai_usage_overview', 'Overview', [
+					'display' => 'compositedisplay',
+					'data' => [
+						'columns' => 2,
+						'items' => [
+							['id' => 'metrics', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_metrics', 'span' => 2],
+							['id' => 'tokens', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_tokens_timeline'],
+							['id' => 'operations', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_operations'],
+							['id' => 'models', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_models', 'span' => 2]
+						]
+					]
+				]],
 				['ai_usage_tokens', 'Tokens', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_tokens_timeline']],
 				['ai_usage_models', 'Models', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_models']],
 				['ai_usage_operations', 'Operations', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_operations']],
