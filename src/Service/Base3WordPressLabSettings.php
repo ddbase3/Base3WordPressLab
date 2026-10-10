@@ -40,6 +40,24 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 				['parserserviceconfigdisplay', 'Parser Services'],
 				['vectorstoreconfigdisplay', 'Vector Stores']
 			]),
+			$this->tab('aiusage', 'AI Usage', [
+				['ai_usage_overview', 'Overview', [
+					'display' => 'compositedisplay',
+					'data' => [
+						'columns' => 2,
+						'items' => [
+							['id' => 'metrics', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_metrics', 'span' => 2],
+							['id' => 'tokens', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_tokens_timeline'],
+							['id' => 'operations', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_operations'],
+							['id' => 'models', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_models', 'span' => 2]
+						]
+					]
+				]],
+				['ai_usage_tokens', 'Tokens', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_tokens_timeline']],
+				['ai_usage_models', 'Models', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_models']],
+				['ai_usage_operations', 'Operations', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_operations']],
+				['ai_usage_requests', 'Requests', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_requests']]
+			]),
 			$this->tab('agents', 'Agents', [
 				['agentadmindisplay', 'Agents'],
 				['agentcompositionadmindisplay', 'Effective Composition'],
@@ -76,24 +94,6 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 				['datahawkmaterializationregistrydisplay', 'Registry'],
 				['datahawkmaterializationrundisplay', 'Runs'],
 				['datahawkmaterializationtabledisplay', 'Tables']
-			]),
-			$this->tab('aiusage', 'AI Usage', [
-				['ai_usage_overview', 'Overview', [
-					'display' => 'compositedisplay',
-					'data' => [
-						'columns' => 2,
-						'items' => [
-							['id' => 'metrics', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_metrics', 'span' => 2],
-							['id' => 'tokens', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_tokens_timeline'],
-							['id' => 'operations', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_operations'],
-							['id' => 'models', 'display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_models', 'span' => 2]
-						]
-					]
-				]],
-				['ai_usage_tokens', 'Tokens', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_tokens_timeline']],
-				['ai_usage_models', 'Models', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_models']],
-				['ai_usage_operations', 'Operations', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_operations']],
-				['ai_usage_requests', 'Requests', ['display' => 'generalreportdisplay', 'data' => 'missionbay_ai_usage_requests']]
 			]),
 			$this->tab('credentials', 'API Keys', [
 				['keymanagementdisplay', 'My API Keys'],
