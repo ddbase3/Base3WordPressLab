@@ -40,6 +40,14 @@ final class Base3WordPressLabPlugin implements IPlugin, IBase {
 			->set(IMigrationRunner::class, fn($c) => new DatabaseMigrationRunner($c->get(IClassMap::class), $c->get(IDatabase::class)), IContainer::SHARED)
 			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class)), IContainer::SHARED);
 
+		// Keep native PHP sessions available before WordPress sends output. The
+		// host adapter binds their BASE3 state to the validated WP login token.
+		if (!(defined('WP_CLI') && WP_CLI)
+			&& $this->container->get(IAccesscontrol::class)->getUserId() > 0
+			&& wp_get_session_token() !== '') {
+			$this->container->get(ISession::class)->start();
+		}
+
 		// MissionBay is an optional BASE3 module. Only compose its services when installed.
 		if ($this->container->get(IModuleRegistry::class)->getModulePath('MissionBay') !== null) {
 			$this->container
