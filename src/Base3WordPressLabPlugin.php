@@ -13,6 +13,8 @@ use Base3\Api\IPlugin;
 use Base3\Api\IBase;
 use Base3\Database\Api\IDatabase;
 use Base3\Migration\Api\IMigrationRunner;
+use Base3\Logger\Api\ILogger;
+use Base3\Logger\ScopedDatabaseLogger\ScopedDatabaseLogger;
 use Base3\Session\Api\ISession;
 use Base3\Migration\Database\DatabaseMigrationRunner;
 use Base3\Settings\Api\ISettingsStore;
@@ -38,6 +40,8 @@ final class Base3WordPressLabPlugin implements IPlugin, IBase {
 			->set(ISettingsStore::class, fn($c) => new DatabaseSettingsStore($c->get(IDatabase::class)), IContainer::SHARED)
 			->set(IStateStore::class, fn($c) => new DatabaseStateStore($c->get(IDatabase::class)), IContainer::SHARED)
 			->set(IMigrationRunner::class, fn($c) => new DatabaseMigrationRunner($c->get(IClassMap::class), $c->get(IDatabase::class)), IContainer::SHARED)
+			->set(ILogger::class, fn($c) => new ScopedDatabaseLogger($c->get(IDatabase::class)), IContainer::SHARED)
+			->set('logger', ILogger::class, IContainer::ALIAS)
 			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class)), IContainer::SHARED);
 
 		// Keep native PHP sessions available before WordPress sends output. The

@@ -109,6 +109,9 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 				['messagedeliverylogadmindisplay', 'Deliveries'],
 				['messagetransportadmindisplay', 'Transports'],
 				['messagehubdemoadmindisplay', 'Demo']
+			]),
+			$this->tab('games', 'Games', [
+				['pulsecoredisplay', 'PulseCore']
 			])
 		];
 	}
