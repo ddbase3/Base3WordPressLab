@@ -14,6 +14,7 @@ use Base3\Api\IBase;
 use Base3\Database\Api\IDatabase;
 use Base3\Migration\Api\IMigrationRunner;
 use Base3\Logger\Api\ILogger;
+use Base3\LinkTarget\Api\ILinkTargetService;
 use Base3\Logger\ScopedDatabaseLogger\ScopedDatabaseLogger;
 use Base3\Session\Api\ISession;
 use Base3\Migration\Database\DatabaseMigrationRunner;
@@ -42,7 +43,7 @@ final class Base3WordPressLabPlugin implements IPlugin, IBase {
 			->set(IMigrationRunner::class, fn($c) => new DatabaseMigrationRunner($c->get(IClassMap::class), $c->get(IDatabase::class)), IContainer::SHARED)
 			->set(ILogger::class, fn($c) => new ScopedDatabaseLogger($c->get(IDatabase::class)), IContainer::SHARED)
 			->set('logger', ILogger::class, IContainer::ALIAS)
-			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class)), IContainer::SHARED);
+			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class), $c->get(ILinkTargetService::class)), IContainer::SHARED);
 
 		// Keep native PHP sessions available before WordPress sends output. The
 		// host adapter binds their BASE3 state to the validated WP login token.

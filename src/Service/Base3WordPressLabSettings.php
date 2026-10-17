@@ -3,6 +3,7 @@
 namespace Base3WordPressLab\Service;
 
 use Base3\Translation\Api\ITranslation;
+use Base3\LinkTarget\Api\ILinkTargetService;
 use Base3WordPress\Api\IBase3WordPressSettings;
 
 /**
@@ -12,7 +13,10 @@ use Base3WordPress\Api\IBase3WordPressSettings;
  */
 final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 
-	public function __construct(private readonly ITranslation $translation) {}
+	public function __construct(
+		private readonly ITranslation $translation,
+		private readonly ILinkTargetService $linkTargetService
+	) {}
 
 	public function getAdministrationConfig(): array {
 		return [
@@ -111,7 +115,8 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 				['messagehubdemoadmindisplay', 'Demo']
 			]),
 			$this->tab('games', 'Games', [
-				['pulsecoredisplay', 'PulseCore']
+				['pulsecoredisplay', 'PulseCore'],
+				['neondriftdisplay', 'NeonDrift']
 			])
 		];
 	}
@@ -134,13 +139,12 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 	}
 
 	private function chatbotConfig(): array {
-		$baseUrl = add_query_arg([
-			'action' => 'base3_filemanager',
-			'_wpnonce' => wp_create_nonce('base3_admin_display')
-		], admin_url('admin-ajax.php'));
 		$endpoints = [];
 		foreach (['list', 'stat', 'mkdir', 'delete', 'rmdir', 'copy', 'move', 'uploadStart', 'uploadChunk', 'uploadStatus', 'uploadFinish', 'uploadAbort', 'download'] as $action) {
-			$endpoints[$action] = add_query_arg('fm_action', $action, $baseUrl);
+			$endpoints[$action] = $this->linkTargetService->getLink(
+				['name' => 'base3wordpressfilemanageroutput', 'out' => 'json'],
+				['fm_action' => $action]
+			);
 		}
 		return [
 			'group' => 'chatbot',
