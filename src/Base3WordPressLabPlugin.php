@@ -6,6 +6,7 @@ use AssistantFoundation\Api\IAgentRuntimeRegistry;
 use AssistantFoundation\Api\IAgentRuntimeSelector;
 use AssistantRuntime\Service\PreferredAgentRuntimeSelector;
 use Base3\Accesscontrol\Api\IAccesscontrol;
+use Base3\Api\IAssetResolver;
 use Base3\Api\IClassMap;
 use Base3\Api\IModuleRegistry;
 use Base3\Api\IContainer;
@@ -24,6 +25,7 @@ use Base3\State\Api\IStateStore;
 use Base3\State\Database\DatabaseStateStore;
 use Base3\Translation\Api\ITranslation;
 use Base3WordPress\Api\IBase3WordPressSettings;
+use Base3WordPressLab\Integration\GlobalChatbot;
 use Base3WordPressLab\Service\Base3WordPressLabSettings;
 use MissionBay\Agent\GlobalAgentKnowledgeService;
 use MissionBay\Api\IAgentKnowledgeService;
@@ -43,7 +45,17 @@ final class Base3WordPressLabPlugin implements IPlugin, IBase {
 			->set(IMigrationRunner::class, fn($c) => new DatabaseMigrationRunner($c->get(IClassMap::class), $c->get(IDatabase::class)), IContainer::SHARED)
 			->set(ILogger::class, fn($c) => new ScopedDatabaseLogger($c->get(IDatabase::class)), IContainer::SHARED)
 			->set('logger', ILogger::class, IContainer::ALIAS)
-			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class), $c->get(ILinkTargetService::class)), IContainer::SHARED);
+			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class), $c->get(ILinkTargetService::class)), IContainer::SHARED)
+			->set(GlobalChatbot::class, fn($c) => new GlobalChatbot(
+				$c->get(ILinkTargetService::class),
+				$c->get(IAssetResolver::class),
+				$c->get(ITranslation::class),
+				$c->get(ISettingsStore::class)
+			), IContainer::SHARED);
+
+		if (!(defined('WP_CLI') && WP_CLI)) {
+			$this->container->get(GlobalChatbot::class)->register();
+		}
 
 		// Keep native PHP sessions available before WordPress sends output. The
 		// host adapter binds their BASE3 state to the validated WP login token.

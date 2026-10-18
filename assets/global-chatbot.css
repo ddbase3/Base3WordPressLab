@@ -1,0 +1,140 @@
+#base3-global-chatbot {
+	position: fixed;
+	right: 20px;
+	bottom: 20px;
+	z-index: 2147483000;
+	font-family: Arial, sans-serif;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+#base3-global-chatbot [hidden] {
+	display: none !important;
+}
+
+#base3-global-chatbot-open {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-width: 60px;
+	min-height: 52px;
+	padding: 12px 18px;
+	border: 0;
+	border-radius: 28px;
+	color: #fff;
+	background: #285dc0;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25);
+}
+
+#base3-global-chatbot-open:hover,
+#base3-global-chatbot-open:focus-visible {
+	background: #204da0;
+}
+
+#base3-global-chatbot :is(button, iframe):focus-visible {
+	outline: 3px solid #efaf23;
+	outline-offset: 2px;
+}
+
+.base3-global-chatbot-symbol {
+	font-size: 22px;
+	line-height: 1;
+}
+
+#base3-global-chatbot-panel {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	width: min(460px, calc(100vw - 24px));
+	height: min(690px, calc(100dvh - 32px));
+	min-width: 0;
+	min-height: 0;
+	box-sizing: border-box;
+	border: 1px solid #d1d6e0;
+	border-radius: 14px;
+	overflow: hidden;
+	background: #fff;
+	color: #1c2734;
+	box-shadow: 0 15px 45px rgba(0, 0, 0, 0.28);
+}
+
+.base3-global-chatbot-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex: 0 0 auto;
+	min-height: 54px;
+	box-sizing: border-box;
+	padding: 8px 14px;
+	background: #285dc0;
+	color: #fff;
+}
+
+.base3-global-chatbot-header strong {
+	font-size: 15px;
+	font-weight: 600;
+}
+
+#base3-global-chatbot-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border: 0;
+	border-radius: 18px;
+	background: transparent;
+	color: #fff;
+	font: inherit;
+	font-size: 28px;
+	cursor: pointer;
+}
+
+#base3-global-chatbot-close:hover {
+	background: rgba(255, 255, 255, 0.16);
+}
+
+#base3-global-chatbot-content {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.base3-global-chatbot-frame {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: 0;
+	background: #fff;
+}
+
+.base3-global-chatbot-loading {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	background: #fff;
+	color: #222;
+}
+
+@media (max-width: 480px) {
+	#base3-global-chatbot {
+		right: 12px;
+		bottom: 12px;
+	}
+
+	#base3-global-chatbot-panel {
+		width: calc(100vw - 24px);
+		height: min(730px, calc(100dvh - 24px));
+	}
+}

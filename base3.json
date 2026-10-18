@@ -2,10 +2,11 @@
   "manifestVersion": 1,
   "name": "Base3WordPressLab",
   "namespace": "Base3WordPressLab",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Project composition example for BASE3 running within WordPress.",
   "dependencies": {
     "Base3Framework": ">=4.10.0",
-    "Base3WordPress": ">=0.1.0"
+    "Base3WordPress": ">=0.1.0",
+    "ClientStack": ">=4.23.0"
   }
 }
