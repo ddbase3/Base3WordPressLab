@@ -140,7 +140,8 @@ namespace {
 		if (!str_contains($html, $name . '="' . $expected . '"')) throw new \RuntimeException('Missing window option: ' . $name);
 	}
 	if (!str_contains($html, 'data-header-title="Ask &lt;strong&gt;KIM&lt;/strong&gt;"')
-		|| !str_contains($html, 'data-dock-target="body"')) {
+		|| !str_contains($html, 'data-dock-target="body"')
+		|| !str_contains($html, 'data-dock-header-target="#wpadminbar"')) {
 		throw new \RuntimeException('The shared launcher branding or sidebar target is incorrect.');
 	}
 

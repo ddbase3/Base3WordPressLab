@@ -58,6 +58,7 @@ final class GlobalChatbot {
 		$attributes = [
 			'data-ajax-url' => $url,
 			'data-dock-target' => 'body',
+			'data-dock-header-target' => '#wpadminbar',
 			'data-button-label' => $label,
 			'data-header-title' => $this->t('global_chatbot_header_title', $label),
 			'data-config-group' => $identity['config_group'],

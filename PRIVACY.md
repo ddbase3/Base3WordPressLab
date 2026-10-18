@@ -35,3 +35,11 @@ The applicable deployment's recipients, hosting location, retention/deletion,
 backups, cookies and ePrivacy duties, consent, processor terms and permissions
 are not verifiable from these sources alone. Public use, frontend themes and
 accessible keyboard/screen-reader behavior require deployment checks.
+
+## WordPress administrator bar and docked launcher
+
+When the shared global chatbot sidebar is open, the WordPress integration
+provides `#wpadminbar` as the host header. ClientStack temporarily adjusts
+its inline layout on desktop so the header ends at the sidebar. The panel is displayed
+above the administration bar. The previous header styles are restored on
+close. This introduces no new request, tracking, storage or data recipient.
