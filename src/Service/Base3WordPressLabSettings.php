@@ -3,6 +3,7 @@
 namespace Base3WordPressLab\Service;
 
 use Base3\Translation\Api\ITranslation;
+use Base3\Usermanager\Api\IUsermanager;
 use Base3\LinkTarget\Api\ILinkTargetService;
 use Base3WordPress\Api\IBase3WordPressSettings;
 
@@ -18,10 +19,57 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 
 	public function __construct(
 		private readonly ITranslation $translation,
-		private readonly ILinkTargetService $linkTargetService
+		private readonly ILinkTargetService $linkTargetService,
+		private readonly IUsermanager $usermanager
 	) {}
 
 	public function getAdministrationConfig(): array {
+		$catalog = $this->getCatalog();
+		if ($this->developer()) return $catalog;
+		$normal = [
+			'base3' => ['servicesadmindisplay', 'authorizationadministrationdisplay'],
+			'chatbot' => ['chatbotconfigdisplay', 'globalchatbotlauncherconfigdisplay'],
+			'games' => ['pulsecoredisplay', 'neondriftdisplay']
+		];
+		$reduced = [];
+		foreach ($catalog as $tab) {
+			$allowed = $normal[$tab['name']] ?? [];
+			if ($allowed === []) continue;
+			$tab['displays'] = array_values(array_filter($tab['displays'], static fn(array $entry): bool => in_array($entry['name'], $allowed, true)));
+			if ($tab['displays'] !== []) $reduced[] = $tab;
+		}
+		return $reduced;
+	}
+
+	/** Full catalog owns the authoritative administration-display routing classifications. */
+	public function getAdministrationAccessLevel(string $name): ?string {
+		// TabControlDisplay can render arbitrary nested displays supplied by its caller.
+		// Public AJAX, blocks and shortcodes must not expose this admin composition tool.
+		if ($name === 'tabcontroldisplay') return 'development';
+		foreach ($this->getCatalog() as $tab) {
+			// Game displays remain public; their owning feature services enforce play rights.
+			if ($tab['name'] === 'games') continue;
+			foreach ($tab['displays'] as $entry) {
+				if (($entry['display'] ?? $entry['name']) !== $name) continue;
+				if ($name === 'base3wordpressaudienceadmindisplay') return 'development';
+				$reduced = [
+					'servicesadmindisplay', 'authorizationadministrationdisplay',
+					'chatbotconfigdisplay', 'globalchatbotlauncherconfigdisplay'
+				];
+				return in_array($name, $reduced, true) ? 'admin' : 'development';
+			}
+		}
+		return null;
+	}
+
+	private function developer(): bool {
+		foreach ($this->usermanager->getGroups() as $group) {
+			if ((string)$group->name === 'development') return true;
+		}
+		return false;
+	}
+
+	private function getCatalog(): array {
 		return [
 			$this->tab('base3', 'BASE3', [
 				['logadmindisplay', 'BASE3 Log'],
@@ -30,7 +78,10 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 				['usermanagerdebugdisplay', 'User Manager'],
 				['statestoreadmindisplay', 'State Store'],
 				['jobsadmindisplay', 'Jobs'],
-				['databaseworkbenchdisplay', 'Database workbench']
+				['databaseworkbenchdisplay', 'Database workbench'],
+				['authorizationadministrationdisplay', 'Permissions', ['params' => ['resource_type' => 'site', 'resource_id' => 'global']]],
+				['base3wordpressgroups', 'Groups', ['display' => 'base3wordpressaudienceadmindisplay', 'data' => ['mode' => 'groups'], 'params' => ['base3_mode' => 'groups']]],
+				['base3wordpressfeatures', 'Features', ['display' => 'base3wordpressaudienceadmindisplay', 'data' => ['mode' => 'features'], 'params' => ['base3_mode' => 'features']]]
 			]),
 			$this->tab('chatbot', 'Chatbot', [
 				['chatbotconfigdisplay', 'Configuration', ['data' => $this->chatbotConfig()]],

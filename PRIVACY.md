@@ -43,3 +43,22 @@ provides `#wpadminbar` as the host header. ClientStack temporarily adjusts
 its inline layout on desktop so the header ends at the sidebar. The panel is displayed
 above the administration bar. The previous header styles are restored on
 close. This introduces no new request, tracking, storage or data recipient.
+
+## BASE3 development bootstrap and navigation (2026-10-19)
+
+The project-owned code group `Base3WordPressDevelopmentGroup` reads optional
+explicit WordPress login names and full email addresses configured in
+`wp-config.php` (`BASE3_WORDPRESS_DEVELOPER_USERNAMES` and
+`BASE3_WORDPRESS_DEVELOPER_EMAILS`). If absent, the fixed developer list is
+empty. Evaluating this membership reads usermanager-provided identity data;
+the group does not query a separate identity store or transmit addresses.
+Authorized administrators may add members through the host-owned BASE3 group
+settings, but cannot delete code-defined identities through the UI. Revocation
+of a bootstrap member requires updating the deployment configuration.
+
+The lab settings service reads the effective BASE3 groups to select reduced or
+full WordPress admin tabs. This is presentation-only; server-side native admin
+and development checks independently secure the Groups/Features routes. The
+lab service creates no new database or table, and persists no navigation
+activity itself. Deployment backup/retention policy, consent/ePrivacy issues,
+controller/legal basis, and repository access controls remain unverified.

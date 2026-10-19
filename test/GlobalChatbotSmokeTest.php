@@ -27,7 +27,13 @@ namespace Base3\Translation\Api {
 }
 
 namespace Base3WordPress\Api {
-	interface IBase3WordPressSettings { public function getAdministrationConfig(): array; }
+	interface IBase3WordPressSettings {
+		public function getAdministrationConfig(): array;
+		public function getAdministrationAccessLevel(string $name): ?string;
+	}
+}
+namespace Base3\Usermanager\Api {
+	interface IUsermanager { public function getGroups(): array; }
 }
 
 namespace {
@@ -145,13 +151,15 @@ namespace {
 		throw new \RuntimeException('The shared launcher branding or sidebar target is incorrect.');
 	}
 
-	$administration = (new Base3WordPressLabSettings($translation, $link))->getAdministrationConfig();
+	$administration = (new Base3WordPressLabSettings($translation, $link, new class implements \Base3\Usermanager\Api\IUsermanager {
+		public function getGroups(): array { return []; }
+	}))->getAdministrationConfig();
 	$chatbotTabs = [];
 	foreach ($administration as $tab) {
 		if ($tab['name'] === 'chatbot') $chatbotTabs = $tab['displays'];
 	}
 	if (array_column($chatbotTabs, 'name') !== [
-		'chatbotconfigdisplay', 'globalchatbotlauncherconfigdisplay', 'chatbotextensionsconfigdisplay'
+		'chatbotconfigdisplay', 'globalchatbotlauncherconfigdisplay'
 	]) throw new \RuntimeException('Chatbot administration tab order changed.');
 	$configData = $chatbotTabs[0]['data'];
 	if (($configData['group'] ?? '') !== $identity['config_group']

@@ -24,6 +24,7 @@ use Base3\Settings\Database\DatabaseSettingsStore;
 use Base3\State\Api\IStateStore;
 use Base3\State\Database\DatabaseStateStore;
 use Base3\Translation\Api\ITranslation;
+use Base3\Usermanager\Api\IUsermanager;
 use Base3WordPress\Api\IBase3WordPressSettings;
 use Base3WordPressLab\Integration\GlobalChatbot;
 use Base3WordPressLab\Service\Base3WordPressLabSettings;
@@ -45,7 +46,7 @@ final class Base3WordPressLabPlugin implements IPlugin, IBase {
 			->set(IMigrationRunner::class, fn($c) => new DatabaseMigrationRunner($c->get(IClassMap::class), $c->get(IDatabase::class)), IContainer::SHARED)
 			->set(ILogger::class, fn($c) => new ScopedDatabaseLogger($c->get(IDatabase::class)), IContainer::SHARED)
 			->set('logger', ILogger::class, IContainer::ALIAS)
-			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class), $c->get(ILinkTargetService::class)), IContainer::SHARED)
+			->set(IBase3WordPressSettings::class, fn($c) => new Base3WordPressLabSettings($c->get(ITranslation::class), $c->get(ILinkTargetService::class), $c->get(IUsermanager::class)), IContainer::SHARED)
 			->set(GlobalChatbot::class, fn($c) => new GlobalChatbot(
 				$c->get(ILinkTargetService::class),
 				$c->get(IAssetResolver::class),
