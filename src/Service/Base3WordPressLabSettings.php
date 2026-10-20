@@ -51,7 +51,7 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 			if ($tab['name'] === 'games') continue;
 			foreach ($tab['displays'] as $entry) {
 				if (($entry['display'] ?? $entry['name']) !== $name) continue;
-				if ($name === 'base3wordpressaudienceadmindisplay') return 'development';
+				if (in_array($name, ['authorizationgroupsdisplay', 'authorizationfeaturesdisplay'], true)) return 'development';
 				$reduced = [
 					'servicesadmindisplay', 'authorizationadministrationdisplay',
 					'chatbotconfigdisplay', 'globalchatbotlauncherconfigdisplay'
@@ -80,8 +80,8 @@ final class Base3WordPressLabSettings implements IBase3WordPressSettings {
 				['jobsadmindisplay', 'Jobs'],
 				['databaseworkbenchdisplay', 'Database workbench'],
 				['authorizationadministrationdisplay', 'Permissions', ['params' => ['resource_type' => 'site', 'resource_id' => 'global']]],
-				['base3wordpressgroups', 'Groups', ['display' => 'base3wordpressaudienceadmindisplay', 'data' => ['mode' => 'groups'], 'params' => ['base3_mode' => 'groups']]],
-				['base3wordpressfeatures', 'Features', ['display' => 'base3wordpressaudienceadmindisplay', 'data' => ['mode' => 'features'], 'params' => ['base3_mode' => 'features']]]
+				['authorizationgroupsdisplay', 'Groups'],
+				['authorizationfeaturesdisplay', 'Features']
 			]),
 			$this->tab('chatbot', 'Chatbot', [
 				['chatbotconfigdisplay', 'Configuration', ['data' => $this->chatbotConfig()]],

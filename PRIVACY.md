@@ -57,8 +57,9 @@ settings, but cannot delete code-defined identities through the UI. Revocation
 of a bootstrap member requires updating the deployment configuration.
 
 The lab settings service reads the effective BASE3 groups to select reduced or
-full WordPress admin tabs. This is presentation-only; server-side native admin
-and development checks independently secure the Groups/Features routes. The
-lab service creates no new database or table, and persists no navigation
-activity itself. Deployment backup/retention policy, consent/ePrivacy issues,
+full WordPress admin tabs, now naming the unchanged ClientStack Groups/Features
+displays directly. This is presentation-only: WordPress native `manage_options`,
+project `development` membership and both transport/session CSRF checks enforce
+the protected routes independently. No new database, table or navigation log is
+created by this configuration; audiences remain in the existing host settings. Deployment backup/retention policy, consent/ePrivacy issues,
 controller/legal basis, and repository access controls remain unverified.
