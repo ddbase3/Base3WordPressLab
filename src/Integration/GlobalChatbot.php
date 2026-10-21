@@ -3,9 +3,14 @@
 namespace Base3WordPressLab\Integration;
 
 use Base3\Api\IAssetResolver;
+use Base3\Authorization\Api\IAuthorizationService;
+use Base3\Authorization\Dto\AuthorizationRequest;
 use Base3\LinkTarget\Api\ILinkTargetService;
 use Base3\Settings\Api\ISettingsStore;
 use Base3\Translation\Api\ITranslation;
+use Base3\Usermanager\Permission;
+use Base3WordPressBridge\AjaxBridge;
+use Base3WordPressLab\Feature\GlobalChatbotLauncherFeature;
 use Base3WordPressLab\Service\Base3WordPressLabSettings;
 use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherSettings;
 
@@ -16,7 +21,8 @@ final class GlobalChatbot {
 		private readonly ILinkTargetService $linkTargetService,
 		private readonly IAssetResolver $assetResolver,
 		private readonly ITranslation $translation,
-		private readonly ISettingsStore $settingsStore
+		private readonly ISettingsStore $settingsStore,
+		private readonly IAuthorizationService $authorization
 	) {}
 
 	public function register(): void {
@@ -24,9 +30,12 @@ final class GlobalChatbot {
 		add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
 		add_action('wp_footer', [$this, 'render'], 10);
 		add_action('admin_footer', [$this, 'render'], 10);
+		add_action('wp_ajax_base3_dispatch', [$this, 'authorizeAjaxRender'], 0);
+		add_action('wp_ajax_nopriv_base3_dispatch', [$this, 'authorizeAjaxRender'], 0);
 	}
 
 	public function enqueueAssets(): void {
+		if (!$this->isAllowed()) return;
 		$root = 'plugin/ClientStack/assets/';
 		wp_enqueue_script(
 			'base3-clientstack-assetloader',
@@ -44,6 +53,7 @@ final class GlobalChatbot {
 	}
 
 	public function render(): void {
+		if (!$this->isAllowed()) return;
 		$identity = [
 			'config_group' => Base3WordPressLabSettings::GLOBAL_CHATBOT_GROUP,
 			'config_name' => Base3WordPressLabSettings::GLOBAL_CHATBOT_NAME
@@ -83,6 +93,30 @@ final class GlobalChatbot {
 		$moduleUrl = $this->assetResolver->resolve('plugin/ClientStack/assets/globalchatbotlauncher/index.js');
 		echo '<div id="base3-chatbot-config" data-base3-global-chatbot-launcher hidden' . $markup . '></div>' . "\n";
 		echo '<script type="module" src="' . esc_url($moduleUrl) . '"></script>' . "\n";
+	}
+
+	/**
+	 * Protects the existing global-launcher AJAX load without restricting block/shortcode rendering.
+	 * The WordPress transport's canonical display-data decoder is reused, not reimplemented.
+	 */
+	public function authorizeAjaxRender(): void {
+		$name = $_GET['name'] ?? null;
+		if (!is_string($name) || strtolower($name) !== 'chatbotdisplay') return;
+		$encoded = $_REQUEST['base3_display_data'] ?? null;
+		if (!is_string($encoded)) return; // The shared dispatcher rejects malformed display data.
+		$decoded = AjaxBridge::decodeDisplayData((string) wp_unslash($encoded));
+		if (!$decoded['valid'] || !is_array($decoded['value'])) return;
+		$data = $decoded['value'];
+		if (($data['config_group'] ?? null) !== Base3WordPressLabSettings::GLOBAL_CHATBOT_GROUP
+			|| ($data['config_name'] ?? null) !== Base3WordPressLabSettings::GLOBAL_CHATBOT_NAME) return;
+		if (!$this->isAllowed()) wp_die('Global chatbot access denied.', '', ['response' => 403]);
+	}
+
+	private function isAllowed(): bool {
+		return $this->authorization->decide(new AuthorizationRequest(
+			$this->authorization->getDefaultAuthority(),
+			Permission::for('feature', GlobalChatbotLauncherFeature::getName())
+		))->isAllowed();
 	}
 
 	private function t(string $key, string $fallback): string {

@@ -24,8 +24,21 @@ chatbots with other identities remain separate.
 The launcher reads the presentation flags from the existing `ISettingsStore`
 dataset `global-chatbot-launcher/default`. The ClientStack module uses browser
 local/session storage to preserve sizes, selected modes and reopening state
-where enabled. The button is visible to anonymous visitors and administration
-users. On open, the chatbot markup/scripts are inserted in the parent page
+where enabled. The feature `globalchatbotlauncherfeature` now controls whether the button is
+rendered and whether its existing `chatbot/default` AJAX display load may run.
+Its default expression permits `anonymous` and `authenticated` groups. The
+active host `IAuthorizationService` evaluates current group/criterion metadata
+and configured audience overrides from the existing
+`base3_authorization_features/catalog` settings record. The `GlobalChatbot`
+component checks before including its browser launcher or permitting the AJAX
+load; it reuses the generic WordPress display-data decoder and returns HTTP 403
+on denial. No new endpoint, storage, recipient, or processing category is
+introduced. Stored feature overrides may contain user IDs, role names and
+identity criteria; normal host settings retention and deletion apply. Direct
+block/shortcode rendering and the general conversation endpoints are
+independent of the launcher feature.
+
+On permitted open, the chatbot markup/scripts are inserted in the parent page
 rather than isolated in a separate iframe. Message content, conversations and
 providers remain under the existing BASE3 Chatbot/Assistant contracts; the
 project launcher does not directly store or transmit their data beyond calling

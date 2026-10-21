@@ -6,6 +6,7 @@ use AssistantFoundation\Api\IAgentRuntimeRegistry;
 use AssistantFoundation\Api\IAgentRuntimeSelector;
 use AssistantRuntime\Service\PreferredAgentRuntimeSelector;
 use Base3\Accesscontrol\Api\IAccesscontrol;
+use Base3\Authorization\Api\IAuthorizationService;
 use Base3\Api\IAssetResolver;
 use Base3\Api\IClassMap;
 use Base3\Api\IModuleRegistry;
@@ -51,7 +52,8 @@ final class Base3WordPressLabPlugin implements IPlugin, IBase {
 				$c->get(ILinkTargetService::class),
 				$c->get(IAssetResolver::class),
 				$c->get(ITranslation::class),
-				$c->get(ISettingsStore::class)
+				$c->get(ISettingsStore::class),
+				$c->get(IAuthorizationService::class)
 			), IContainer::SHARED);
 
 		if (!(defined('WP_CLI') && WP_CLI)) {

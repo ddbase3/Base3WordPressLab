@@ -4,6 +4,38 @@ namespace Base3\Api {
 	interface IAssetResolver { public function resolve(string $path): string; }
 }
 
+namespace Base3\Authorization\Api {
+	interface IFeature {
+		public static function getName(): string;
+		public function getLabel(): string;
+		public function getDescription(): string;
+		public function getPermissions(): array;
+		public function getDefaultAudience(): array;
+	}
+	interface IAuthorizationService {
+		public function getDefaultAuthority(): string;
+		public function decide(\Base3\Authorization\Dto\AuthorizationRequest $request): \Base3\Authorization\Dto\AuthorizationDecision;
+		public function decideMany(array $requests): array;
+	}
+}
+
+namespace Base3\Usermanager {
+	final class Permission {
+		public function __construct(public string $scope, public string $permission) {}
+		public static function for(string $scope, string $permission): self { return new self($scope, $permission); }
+	}
+}
+
+namespace Base3\Authorization\Dto {
+	final class AuthorizationRequest {
+		public function __construct(public string $authority, public \Base3\Usermanager\Permission $permission) {}
+	}
+	final class AuthorizationDecision {
+		public function __construct(private readonly bool $allowed) {}
+		public function isAllowed(): bool { return $this->allowed; }
+	}
+}
+
 namespace Base3\LinkTarget\Api {
 	interface ILinkTargetService { public function getLink(array $target, array $params = []): string; }
 }
@@ -38,6 +70,10 @@ namespace Base3\Usermanager\Api {
 
 namespace {
 	use Base3\Api\IAssetResolver;
+	use Base3\Authorization\Api\IAuthorizationService;
+	use Base3\Authorization\Dto\AuthorizationRequest;
+	use Base3\Authorization\Dto\AuthorizationDecision;
+	use Base3WordPressLab\Feature\GlobalChatbotLauncherFeature;
 	use Base3\LinkTarget\Api\ILinkTargetService;
 	use Base3\Settings\Api\ISettingsStore;
 	use Base3\Translation\Api\ITranslation;
@@ -66,6 +102,13 @@ namespace {
 
 	function esc_url(string $url): string { return htmlspecialchars($url, ENT_QUOTES, 'UTF-8'); }
 	function esc_attr(string $value): string { return htmlspecialchars($value, ENT_QUOTES, 'UTF-8'); }
+	function wp_unslash(string $value): string { return stripslashes($value); }
+	final class TestWpDie extends \RuntimeException {
+		public function __construct(public int $status) { parent::__construct('wp_die'); }
+	}
+	function wp_die(string $message, string $title = '', array $args = []): never {
+		throw new TestWpDie((int) ($args['response'] ?? 500));
+	}
 
 	$clientStackSettings = dirname(__DIR__, 2) . '/ClientStack/src/GlobalChatbotLauncher/GlobalChatbotLauncherSettings.php';
 	if (!is_file($clientStackSettings)) {
@@ -73,6 +116,8 @@ namespace {
 	}
 	require_once $clientStackSettings;
 	require_once dirname(__DIR__) . '/src/Service/Base3WordPressLabSettings.php';
+	require_once dirname(__DIR__) . '/src/Feature/GlobalChatbotLauncherFeature.php';
+	require_once dirname(__DIR__, 3) . '/includes/AjaxBridge.php';
 	require_once dirname(__DIR__) . '/src/Integration/GlobalChatbot.php';
 
 	$link = new class implements ILinkTargetService {
@@ -111,10 +156,35 @@ namespace {
 	$configuration['reopen_overlay'] = true;
 	GlobalChatbotLauncherSettings::save($store, $configuration);
 
-	$launcher = new GlobalChatbot($link, $resolver, $translation, $store);
+	$authorization = new class implements IAuthorizationService {
+		public bool $allowed = true;
+		public array $requests = [];
+		public function getDefaultAuthority(): string { return 'wordpress'; }
+		public function decide(AuthorizationRequest $request): AuthorizationDecision {
+			$this->requests[] = $request;
+			return new AuthorizationDecision($this->allowed);
+		}
+		public function decideMany(array $requests): array { return []; }
+	};
+	$feature = new GlobalChatbotLauncherFeature($translation);
+	if ($feature::getName() !== 'globalchatbotlauncherfeature'
+		|| count($feature->getPermissions()) !== 1
+		|| $feature->getPermissions()[0]->permission !== $feature::getName()
+		|| $feature->getPermissions()[0]->scope !== 'feature'
+		|| $feature->getDefaultAudience() !== ['any' => [['group' => 'anonymous'], ['group' => 'authenticated']]]) {
+		throw new \RuntimeException('Feature ownership and audience are incorrect.');
+	}
+	if ($feature->getLabel() === '' || $feature->getDescription() === '') {
+		throw new \RuntimeException('Feature translations are missing.');
+	}
+	$launcher = new GlobalChatbot($link, $resolver, $translation, $store, $authorization);
 	$launcher->register();
-	foreach (['wp_enqueue_scripts', 'admin_enqueue_scripts', 'wp_footer', 'admin_footer'] as $hook) {
+	foreach (['wp_enqueue_scripts', 'admin_enqueue_scripts', 'wp_footer', 'admin_footer',
+		'wp_ajax_base3_dispatch', 'wp_ajax_nopriv_base3_dispatch'] as $hook) {
 		if (count($hooks[$hook] ?? []) !== 1) throw new \RuntimeException('Missing WordPress hook: ' . $hook);
+	}
+	if ($hooks['wp_ajax_base3_dispatch'][0][1] !== 0 || $hooks['wp_ajax_nopriv_base3_dispatch'][0][1] !== 0) {
+		throw new \RuntimeException('The AJAX access guard must run before base3_dispatch.');
 	}
 	$launcher->enqueueAssets();
 	if (($scripts['base3-clientstack-assetloader'][1] ?? null) !== false
@@ -137,6 +207,13 @@ namespace {
 	parse_str((string) parse_url(html_entity_decode($match[1], ENT_QUOTES, 'UTF-8'), PHP_URL_QUERY), $query);
 	if (($query['action'] ?? '') !== 'base3_dispatch' || ($query['name'] ?? '') !== 'chatbotdisplay'
 		|| ($query['out'] ?? '') !== 'html') throw new \RuntimeException('The generic BASE3 display route changed.');
+	foreach ($authorization->requests as $request) {
+		if ($request->authority !== 'wordpress'
+			|| $request->permission->scope !== 'feature'
+			|| $request->permission->permission !== GlobalChatbotLauncherFeature::getName()) {
+			throw new \RuntimeException('Wrong authorization operation checked.');
+		}
+	}
 	$data = (string) ($query['base3_display_data'] ?? '');
 	$identity = json_decode((string) base64_decode(strtr($data, '-_', '+/'), true), true, 512, JSON_THROW_ON_ERROR);
 	if ($identity !== ['config_group' => 'chatbot', 'config_name' => 'default']) throw new \RuntimeException('Global chatbot identity changed.');
@@ -150,6 +227,46 @@ namespace {
 		|| !str_contains($html, 'data-dock-header-target="#wpadminbar"')) {
 		throw new \RuntimeException('The shared launcher branding or sidebar target is incorrect.');
 	}
+
+	// The global chatbot AJAX load is gated independently of the shared chatbot outputs.
+	$_GET = ['name' => 'chatbotdisplay'];
+	$_REQUEST = ['base3_display_data' => $data];
+	$authorization->allowed = false;
+	try {
+		$launcher->authorizeAjaxRender();
+		throw new \RuntimeException('Denied global chatbot AJAX must terminate.');
+	} catch (TestWpDie $e) {
+		if ($e->status !== 403) throw new \RuntimeException('Denied global chatbot AJAX must return HTTP 403.');
+	}
+	$authorization->allowed = true;
+	$launcher->authorizeAjaxRender();
+
+	$authorization->allowed = false;
+	ob_start();
+	$launcher->render();
+	$deniedMarkup = (string) ob_get_clean();
+	if ($deniedMarkup !== '') throw new \RuntimeException('Denied global launcher still renders.');
+	$scripts = [];
+	$styles = [];
+	$launcher->enqueueAssets();
+	if ($scripts !== [] || $styles !== []) throw new \RuntimeException('Denied global launcher still loads assets.');
+
+	$unrelated = rtrim(strtr(base64_encode(json_encode([
+		'config_group' => 'content', 'config_name' => 'support'
+	], JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
+	$_REQUEST['base3_display_data'] = $unrelated;
+	$launcher->authorizeAjaxRender();
+	// This target may be rendered through BlockBridge/shortcodes without the launcher permission.
+	$_GET['name'] = 'chatbotconversationstate';
+	$_REQUEST['base3_display_data'] = $data;
+	$launcher->authorizeAjaxRender();
+	$_GET['name'] = 'chatbotdisplay';
+	$_REQUEST['base3_display_data'] = 'not-base64%';
+	$launcher->authorizeAjaxRender(); // The canonical dispatcher rejects malformed payloads with 400.
+	if (\Base3WordPressBridge\AjaxBridge::decodeDisplayData('not-base64%')['valid']) {
+		throw new \RuntimeException('Invalid display data unexpectedly decoded.');
+	}
+	unset($_GET['name'], $_REQUEST['base3_display_data']);
 
 	$administration = (new Base3WordPressLabSettings($translation, $link, new class implements \Base3\Usermanager\Api\IUsermanager {
 		public function getGroups(): array { return []; }
@@ -168,5 +285,5 @@ namespace {
 		throw new \RuntimeException('The chatbot administration or FileManager configuration was changed.');
 	}
 
-	echo "GlobalChatbotSmokeTest OK: ClientStack ES module, all launcher flags, generic dispatch, tab ordering, 13 file endpoints.\n";
+	echo "GlobalChatbotSmokeTest OK: ClientStack launcher, feature permission, HTTP 403 guard, unrelated displays, tab ordering, 13 file endpoints.\n";
 }
