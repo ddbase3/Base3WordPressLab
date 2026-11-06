@@ -21,11 +21,14 @@ async function main() {
 		assert.equal(typeof module[name], 'function', `Missing shared launcher export: ${name}`);
 	}
 	const host = fs.readFileSync(path.join(__dirname, '../src/Integration/GlobalChatbot.php'), 'utf8');
-	assert.match(host, /data-base3-global-chatbot-launcher/);
-	assert.match(host, /globalchatbotlauncher\/index\.js/);
-	assert.match(host, /<script type=\\?"module/);
+	const bootstrap = fs.readFileSync(path.join(root, 'ClientStack/src/GlobalChatbotLauncher/GlobalChatbotLauncherBootstrap.php'), 'utf8');
+	assert.match(host, /GlobalChatbotLauncherBootstrap/);
+	assert.match(host, /renderAuthorized\(/);
+	assert.match(bootstrap, /data-base3-global-chatbot-launcher/);
+	assert.match(bootstrap, /globalchatbotlauncher\/index\.js/);
+	assert.match(bootstrap, /<script type=/);
 	assert.doesNotMatch(host, /global-chatbot\.js|global-chatbot\.css|<iframe/);
-	console.log('GlobalChatbotDomSmokeTest OK: WordPress uses the deployed ClientStack ES module and stylesheet.');
+	console.log('GlobalChatbotDomSmokeTest OK: WordPress delegates to the canonical ClientStack renderer and ES module.');
 }
 
 main().catch((error) => { console.error(error); process.exitCode = 1; });

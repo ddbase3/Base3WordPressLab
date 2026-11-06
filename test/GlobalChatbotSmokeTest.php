@@ -2,6 +2,14 @@
 
 namespace Base3\Api {
 	interface IAssetResolver { public function resolve(string $path): string; }
+	interface IMvcView {
+		public function setPath(string $path = '.');
+		public function assign(string $key, $value);
+		public function setTemplate(string $template = 'default');
+		public function loadTemplate(): string;
+		public function loadBricks(string $set, string $language = '');
+		public function getBricks(string $set): ?array;
+	}
 }
 
 namespace Base3\Authorization\Api {
@@ -58,27 +66,19 @@ namespace Base3\Translation\Api {
 	}
 }
 
-namespace Base3WordPress\Api {
-	interface IBase3WordPressSettings {
-		public function getAdministrationConfig(): array;
-		public function getAdministrationAccessLevel(string $name): ?string;
-	}
-}
-namespace Base3\Usermanager\Api {
-	interface IUsermanager { public function getGroups(): array; }
-}
-
 namespace {
 	use Base3\Api\IAssetResolver;
 	use Base3\Authorization\Api\IAuthorizationService;
 	use Base3\Authorization\Dto\AuthorizationRequest;
 	use Base3\Authorization\Dto\AuthorizationDecision;
-	use Base3WordPressLab\Feature\GlobalChatbotLauncherFeature;
+	use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature;
 	use Base3\LinkTarget\Api\ILinkTargetService;
 	use Base3\Settings\Api\ISettingsStore;
 	use Base3\Translation\Api\ITranslation;
 	use Base3WordPressLab\Integration\GlobalChatbot;
-	use Base3WordPressLab\Service\Base3WordPressLabSettings;
+	use Base3WordPressLab\Service\WordPressChatbotDisplayConfiguration;
+	use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap;
+	use Base3WordPressLab\Test\Support\GlobalChatbotSmokeView;
 	use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherSettings;
 
 	$hooks = [];
@@ -115,8 +115,11 @@ namespace {
 		throw new \RuntimeException('Pull ClientStack before running the WordPress launcher test.');
 	}
 	require_once $clientStackSettings;
-	require_once dirname(__DIR__) . '/src/Service/Base3WordPressLabSettings.php';
-	require_once dirname(__DIR__) . '/src/Feature/GlobalChatbotLauncherFeature.php';
+	require_once dirname(__DIR__, 2) . '/ClientStack/src/GlobalChatbotLauncher/GlobalChatbotLauncherFeature.php';
+	require_once dirname(__DIR__, 2) . '/ClientStack/src/GlobalChatbotLauncher/GlobalChatbotLauncherBootstrap.php';
+	require_once dirname(__DIR__, 2) . '/ClientStack/src/FileManager/FileManagerHttpService.php';
+	require_once dirname(__DIR__) . '/src/Service/WordPressChatbotDisplayConfiguration.php';
+	require_once dirname(__DIR__) . '/test/Support/GlobalChatbotSmokeView.php';
 	require_once dirname(__DIR__, 3) . '/includes/AjaxBridge.php';
 	require_once dirname(__DIR__) . '/src/Integration/GlobalChatbot.php';
 
@@ -134,7 +137,11 @@ namespace {
 	};
 	$translation = new class implements ITranslation {
 		public function translate(string $set, string $section, string $key, string $fallback = '', array $replacements = []): string {
-			return $key === 'global_chatbot_header_title' ? 'Ask <strong>KIM</strong>' : $fallback;
+			return match ($key) {
+				'global_chatbot_header_title' => 'Ask <strong>KIM</strong>',
+				'label' => 'Global Chatbot', 'description' => 'Global Chatbot Launcher',
+				default => $fallback
+			};
 		}
 	};
 	$store = new class implements ISettingsStore {
@@ -171,13 +178,14 @@ namespace {
 		|| count($feature->getPermissions()) !== 1
 		|| $feature->getPermissions()[0]->permission !== $feature::getName()
 		|| $feature->getPermissions()[0]->scope !== 'feature'
-		|| $feature->getDefaultAudience() !== ['any' => [['group' => 'anonymous'], ['group' => 'authenticated']]]) {
+		|| $feature->getDefaultAudience() !== ['group' => 'authenticated']) {
 		throw new \RuntimeException('Feature ownership and audience are incorrect.');
 	}
 	if ($feature->getLabel() === '' || $feature->getDescription() === '') {
 		throw new \RuntimeException('Feature translations are missing.');
 	}
-	$launcher = new GlobalChatbot($link, $resolver, $translation, $store, $authorization);
+	$sharedLauncher = new GlobalChatbotLauncherBootstrap($resolver, $store, new GlobalChatbotSmokeView());
+	$launcher = new GlobalChatbot($link, $resolver, $translation, $authorization, $sharedLauncher);
 	$launcher->register();
 	foreach (['wp_enqueue_scripts', 'admin_enqueue_scripts', 'wp_footer', 'admin_footer',
 		'wp_ajax_base3_dispatch', 'wp_ajax_nopriv_base3_dispatch'] as $hook) {
@@ -188,11 +196,10 @@ namespace {
 	}
 	$launcher->enqueueAssets();
 	if (($scripts['base3-clientstack-assetloader'][1] ?? null) !== false
-		|| !str_ends_with($scripts['base3-clientstack-assetloader'][0] ?? '', 'ClientStack/assets/assetloader/assetloader.min.js')
-		|| !str_ends_with($styles['base3-global-chatbot'] ?? '', 'ClientStack/assets/globalchatbotlauncher/styles/globalchatbotlauncher.css')) {
+		|| !str_ends_with($scripts['base3-clientstack-assetloader'][0] ?? '', 'ClientStack/assets/assetloader/assetloader.min.js')) {
 		throw new \RuntimeException('Shared ClientStack assets were not enqueued.');
 	}
-	if (isset($scripts['base3-global-chatbot'])) throw new \RuntimeException('Legacy WordPress launcher is still enqueued.');
+	if (isset($scripts['base3-global-chatbot']) || isset($styles['base3-global-chatbot'])) throw new \RuntimeException('Legacy WordPress launcher is still enqueued.');
 
 	ob_start();
 	$launcher->render();
@@ -268,22 +275,15 @@ namespace {
 	}
 	unset($_GET['name'], $_REQUEST['base3_display_data']);
 
-	$administration = (new Base3WordPressLabSettings($translation, $link, new class implements \Base3\Usermanager\Api\IUsermanager {
-		public function getGroups(): array { return []; }
-	}))->getAdministrationConfig();
-	$chatbotTabs = [];
-	foreach ($administration as $tab) {
-		if ($tab['name'] === 'chatbot') $chatbotTabs = $tab['displays'];
-	}
-	if (array_column($chatbotTabs, 'name') !== [
-		'chatbotconfigdisplay', 'globalchatbotlauncherconfigdisplay'
-	]) throw new \RuntimeException('Chatbot administration tab order changed.');
-	$configData = $chatbotTabs[0]['data'];
+	$configData = WordPressChatbotDisplayConfiguration::displayData($link, $translation);
 	if (($configData['group'] ?? '') !== $identity['config_group']
 		|| ($configData['name'] ?? '') !== $identity['config_name']
 		|| count($configData['resources']['endpoints'] ?? []) !== 13) {
-		throw new \RuntimeException('The chatbot administration or FileManager configuration was changed.');
+		throw new \RuntimeException('The canonical chatbot configuration or FileManager endpoints changed.');
+	}
+	if (WordPressChatbotDisplayConfiguration::storageOwner() !== ['group'=>'chatbot', 'name'=>'default']) {
+		throw new \RuntimeException('The WordPress storage owner changed.');
 	}
 
-	echo "GlobalChatbotSmokeTest OK: ClientStack launcher, feature permission, HTTP 403 guard, unrelated displays, tab ordering, 13 file endpoints.\n";
+	echo "GlobalChatbotSmokeTest OK: ClientStack launcher, feature permission, HTTP 403 guard, unrelated displays, dynamic configuration, 13 file endpoints.\n";
 }

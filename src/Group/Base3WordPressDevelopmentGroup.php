@@ -6,7 +6,7 @@ use Base3\Usermanager\Api\IGroup;
 use Base3\Usermanager\Group;
 use InvalidArgumentException;
 
-/** Project-owned, code-backed initial developer membership; settings may only add members. */
+/** Project-owned BASE3 development membership: native WordPress administration or configured identities. */
 final class Base3WordPressDevelopmentGroup implements IGroup {
 
 	public static function getName(): string { return 'base3wordpressdevelopmentgroup'; }
@@ -16,8 +16,9 @@ final class Base3WordPressDevelopmentGroup implements IGroup {
 	}
 
 	/**
-	 * Reads exact deployment-owned identities, e.g. from wp-config.php; no default administrator bypass.
-	 * @return array<string,mixed> Fixed identity criterion, empty lists match nobody
+	 * Native WordPress site managers must be able to administer BASE3 features.
+	 * Optional exact deployment identities may extend this project-owned group.
+	 * @return array<string,mixed> Fixed OR expression for native administration and exact identities
 	 * @throws InvalidArgumentException On a malformed deployment allowlist
 	 */
 	public function getCriteria(): array {
@@ -29,7 +30,10 @@ final class Base3WordPressDevelopmentGroup implements IGroup {
 				if (!is_string($value) || trim($value) !== $value || $value === '') throw new InvalidArgumentException('Invalid developer identity.');
 			}
 		}
-		return ['criterion'=>'base3useridentitycriterion','config'=>['usernames'=>$usernames,'emails'=>$emails]];
+		return ['any' => [
+			['criterion' => 'wordpresscapabilitycriterion', 'config' => ['capability' => 'manage_options']],
+			['criterion' => 'base3useridentitycriterion', 'config' => ['usernames' => $usernames, 'emails' => $emails]]
+		]];
 	}
 
 	public function isEditable(): bool { return true; }

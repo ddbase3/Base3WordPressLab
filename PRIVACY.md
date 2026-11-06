@@ -26,7 +26,8 @@ dataset `global-chatbot-launcher/default`. The ClientStack module uses browser
 local/session storage to preserve sizes, selected modes and reopening state
 where enabled. The feature `globalchatbotlauncherfeature` now controls whether the button is
 rendered and whether its existing `chatbot/default` AJAX display load may run.
-Its default expression permits `anonymous` and `authenticated` groups. The
+Its default expression permits the `authenticated` group only. No old
+WordPressLab feature audience is migrated on the demo installation. The
 active host `IAuthorizationService` evaluates current group/criterion metadata
 and configured audience overrides from the existing
 `base3_authorization_features/catalog` settings record. The `GlobalChatbot`
@@ -62,17 +63,28 @@ close. This introduces no new request, tracking, storage or data recipient.
 The project-owned code group `Base3WordPressDevelopmentGroup` reads optional
 explicit WordPress login names and full email addresses configured in
 `wp-config.php` (`BASE3_WORDPRESS_DEVELOPER_USERNAMES` and
-`BASE3_WORDPRESS_DEVELOPER_EMAILS`). If absent, the fixed developer list is
-empty. Evaluating this membership reads usermanager-provided identity data;
-the group does not query a separate identity store or transmit addresses.
+`BASE3_WORDPRESS_DEVELOPER_EMAILS`). The fixed project criteria also check the
+user's native WordPress `manage_options` capability. A site administrator
+therefore obtains BASE3 `development` membership even when both optional
+identity lists are empty. Evaluating this membership uses the native WordPress
+capability API and existing usermanager identity data; no separate store or
+recipient is introduced.
 Authorized administrators may add members through the host-owned BASE3 group
 settings, but cannot delete code-defined identities through the UI. Revocation
 of a bootstrap member requires updating the deployment configuration.
 
-The lab settings service reads the effective BASE3 groups to select reduced or
-full WordPress admin tabs, now naming the unchanged ClientStack Groups/Features
-displays directly. This is presentation-only: WordPress native `manage_options`,
-project `development` membership and both transport/session CSRF checks enforce
-the protected routes independently. No new database, table or navigation log is
+The project no longer owns a static settings catalog. ClientStack discovers
+`ISettingsTab` instances through the BASE3 classmap. WordPress native
+`manage_options`, BASE3 feature decisions, project `development` membership
+(including native site administrators) and transport/session CSRF checks protect
+the relevant actions. No new database, table or navigation log is
 created by this configuration; audiences remain in the existing host settings. Deployment backup/retention policy, consent/ePrivacy issues,
 controller/legal basis, and repository access controls remain unverified.
+
+## Canonical service ownership
+
+The project registers `chatbotConfigDisplayData` and a trusted FileManager owner
+parameter with lazy service resolution. The global launcher presentation is owned
+by ClientStack. The prior WordPressLab launcher feature declaration, static admin
+configuration, and launcher assets are removed in the same patch. WordPress
+private files, upload sessions and their directory layout are unchanged.
