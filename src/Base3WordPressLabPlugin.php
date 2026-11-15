@@ -1,35 +1,35 @@
 <?php declare(strict_types=1);
 
-namespace Base3WordPressLab;
+namespace Base3\Base3WordPressLab;
 
-use AssistantFoundation\Api\IAgentRuntimeRegistry;
-use AssistantFoundation\Api\IAgentRuntimeSelector;
-use AssistantRuntime\Service\PreferredAgentRuntimeSelector;
-use Base3\Accesscontrol\Api\IAccesscontrol;
-use Base3\Api\IAssetResolver;
-use Base3\Authorization\Api\IAuthorizationService;
-use Base3\Api\IClassMap;
-use Base3\Api\IModuleRegistry;
-use Base3\Api\IContainer;
-use Base3\Api\IPlugin;
-use Base3\Api\IBase;
-use Base3\Database\Api\IDatabase;
-use Base3\Migration\Api\IMigrationRunner;
-use Base3\Logger\Api\ILogger;
-use Base3\LinkTarget\Api\ILinkTargetService;
-use Base3\Logger\ScopedDatabaseLogger\ScopedDatabaseLogger;
-use Base3\Session\Api\ISession;
-use Base3\Migration\Database\DatabaseMigrationRunner;
-use Base3\Settings\Api\ISettingsStore;
-use Base3\Settings\Database\DatabaseSettingsStore;
-use Base3\State\Api\IStateStore;
-use Base3\State\Database\DatabaseStateStore;
-use Base3\Translation\Api\ITranslation;
-use Base3WordPressLab\Integration\GlobalChatbot;
-use Base3WordPressLab\Service\WordPressChatbotDisplayConfiguration;
-use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap;
-use MissionBay\Agent\GlobalAgentKnowledgeService;
-use MissionBay\Api\IAgentKnowledgeService;
+use Base3\AssistantFoundation\Api\IAgentRuntimeRegistry;
+use Base3\AssistantFoundation\Api\IAgentRuntimeSelector;
+use Base3\AssistantRuntime\Service\PreferredAgentRuntimeSelector;
+use Base3\CoreFoundation\Accesscontrol\Api\IAccesscontrol;
+use Base3\CoreFoundation\Api\IAssetResolver;
+use Base3\CoreFoundation\Authorization\Api\IAuthorizationService;
+use Base3\CoreFoundation\Api\IClassMap;
+use Base3\CoreFoundation\Api\IModuleRegistry;
+use Base3\CoreFoundation\Api\IContainer;
+use Base3\CoreFoundation\Api\IPlugin;
+use Base3\CoreFoundation\Api\IBase;
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\CoreFoundation\Migration\Api\IMigrationRunner;
+use Base3\CoreFoundation\Logger\Api\ILogger;
+use Base3\CoreFoundation\LinkTarget\Api\ILinkTargetService;
+use Base3\Core\Logger\ScopedDatabaseLogger\ScopedDatabaseLogger;
+use Base3\CoreFoundation\Session\Api\ISession;
+use Base3\Core\Migration\Database\DatabaseMigrationRunner;
+use Base3\CoreFoundation\Settings\Api\ISettingsStore;
+use Base3\Core\Settings\Database\DatabaseSettingsStore;
+use Base3\CoreFoundation\State\Api\IStateStore;
+use Base3\Core\State\Database\DatabaseStateStore;
+use Base3\CoreFoundation\Translation\Api\ITranslation;
+use Base3\Base3WordPressLab\Integration\GlobalChatbot;
+use Base3\Base3WordPressLab\Service\WordPressChatbotDisplayConfiguration;
+use Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap;
+use Base3\MissionBay\Agent\GlobalAgentKnowledgeService;
+use Base3\MissionBay\Api\IAgentKnowledgeService;
 
 /** Example project composition, ported from the ILIAS lab responsibility. */
 final class Base3WordPressLabPlugin implements IPlugin, IBase {
@@ -88,10 +88,10 @@ final class Base3WordPressLabPlugin implements IPlugin, IBase {
 
 		// Keep the ILIAS lab behavior: user removal invalidates assistant conversation history.
 		add_action('deleted_user', function(int $userId): void {
-			if (!interface_exists(\AssistantFoundation\Api\IAgentConversationMemory::class)) return;
-			$ownerKey = \AssistantFoundation\Dto\AgentConversationScope::ownerKeyForUser($userId);
+			if (!interface_exists(\Base3\AssistantFoundation\Api\IAgentConversationMemory::class)) return;
+			$ownerKey = \Base3\AssistantFoundation\Dto\AgentConversationScope::ownerKeyForUser($userId);
 			$map = $this->container->get(IClassMap::class);
-			foreach ($map->getInstancesByInterface(\AssistantFoundation\Api\IAgentConversationMemory::class) as $memory) {
+			foreach ($map->getInstancesByInterface(\Base3\AssistantFoundation\Api\IAgentConversationMemory::class) as $memory) {
 				$memory->deleteConversationsByOwnerKey($ownerKey);
 			}
 		});

@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Base3WordPressLab\Service;
+namespace Base3\Base3WordPressLab\Service;
 
-use Base3\LinkTarget\Api\ILinkTargetService;
-use Base3\Translation\Api\ITranslation;
-use ClientStack\FileManager\FileManagerHttpService;
+use Base3\CoreFoundation\LinkTarget\Api\ILinkTargetService;
+use Base3\CoreFoundation\Translation\Api\ITranslation;
+use Base3\ClientStack\FileManager\FileManagerHttpService;
 
 /** Owns the single WordPress project's global chatbot identity and display data. */
 final class WordPressChatbotDisplayConfiguration {

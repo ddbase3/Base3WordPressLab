@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace Base3WordPressLab\Group;
+namespace Base3\Base3WordPressLab\Group;
 
-use Base3\Usermanager\Api\IGroup;
-use Base3\Usermanager\Group;
+use Base3\CoreFoundation\Usermanager\Api\IGroup;
+use Base3\CoreFoundation\Usermanager\Group;
 use InvalidArgumentException;
 
 /** Project-owned BASE3 development membership: native WordPress administration or configured identities. */

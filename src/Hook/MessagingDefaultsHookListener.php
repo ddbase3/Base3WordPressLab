@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace Base3WordPressLab\Hook;
+namespace Base3\Base3WordPressLab\Hook;
 
-use Base3\Api\IContainer;
-use Base3\Api\IModuleRegistry;
-use Base3\Hook\Api\IHookListener;
-use Base3\Settings\Api\ISettingsStore;
+use Base3\CoreFoundation\Api\IContainer;
+use Base3\CoreFoundation\Api\IModuleRegistry;
+use Base3\CoreFoundation\Hook\Api\IHookListener;
+use Base3\CoreFoundation\Settings\Api\ISettingsStore;
 
 /** Seeds project messaging defaults after schema migrations, without replacing edited settings. */
 final class MessagingDefaultsHookListener implements IHookListener {

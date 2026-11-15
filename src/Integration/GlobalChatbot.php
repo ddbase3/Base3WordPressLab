@@ -1,17 +1,17 @@
 <?php declare(strict_types=1);
 
-namespace Base3WordPressLab\Integration;
+namespace Base3\Base3WordPressLab\Integration;
 
-use Base3\Api\IAssetResolver;
-use Base3\Authorization\Api\IAuthorizationService;
-use Base3\Authorization\Dto\AuthorizationRequest;
-use Base3\LinkTarget\Api\ILinkTargetService;
-use Base3\Translation\Api\ITranslation;
-use Base3\Usermanager\Permission;
+use Base3\CoreFoundation\Api\IAssetResolver;
+use Base3\CoreFoundation\Authorization\Api\IAuthorizationService;
+use Base3\CoreFoundation\Authorization\Dto\AuthorizationRequest;
+use Base3\CoreFoundation\LinkTarget\Api\ILinkTargetService;
+use Base3\CoreFoundation\Translation\Api\ITranslation;
+use Base3\CoreFoundation\Usermanager\Permission;
 use Base3WordPressBridge\AjaxBridge;
-use Base3WordPressLab\Service\WordPressChatbotDisplayConfiguration;
-use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap;
-use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature;
+use Base3\Base3WordPressLab\Service\WordPressChatbotDisplayConfiguration;
+use Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap;
+use Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature;
 use Throwable;
 
 /** Connects canonical ClientStack launcher to WordPress hooks and authorization. */

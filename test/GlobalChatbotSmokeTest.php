@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Base3\Api {
+namespace Base3\CoreFoundation\Api {
 	interface IAssetResolver { public function resolve(string $path): string; }
 	interface IMvcView {
 		public function setPath(string $path = '.');
@@ -12,7 +12,7 @@ namespace Base3\Api {
 	}
 }
 
-namespace Base3\Authorization\Api {
+namespace Base3\CoreFoundation\Authorization\Api {
 	interface IFeature {
 		public static function getName(): string;
 		public function getLabel(): string;
@@ -22,21 +22,21 @@ namespace Base3\Authorization\Api {
 	}
 	interface IAuthorizationService {
 		public function getDefaultAuthority(): string;
-		public function decide(\Base3\Authorization\Dto\AuthorizationRequest $request): \Base3\Authorization\Dto\AuthorizationDecision;
+		public function decide(\Base3\CoreFoundation\Authorization\Dto\AuthorizationRequest $request): \Base3\CoreFoundation\Authorization\Dto\AuthorizationDecision;
 		public function decideMany(array $requests): array;
 	}
 }
 
-namespace Base3\Usermanager {
+namespace Base3\CoreFoundation\Usermanager {
 	final class Permission {
 		public function __construct(public string $scope, public string $permission) {}
 		public static function for(string $scope, string $permission): self { return new self($scope, $permission); }
 	}
 }
 
-namespace Base3\Authorization\Dto {
+namespace Base3\CoreFoundation\Authorization\Dto {
 	final class AuthorizationRequest {
-		public function __construct(public string $authority, public \Base3\Usermanager\Permission $permission) {}
+		public function __construct(public string $authority, public \Base3\CoreFoundation\Usermanager\Permission $permission) {}
 	}
 	final class AuthorizationDecision {
 		public function __construct(private readonly bool $allowed) {}
@@ -44,11 +44,11 @@ namespace Base3\Authorization\Dto {
 	}
 }
 
-namespace Base3\LinkTarget\Api {
+namespace Base3\CoreFoundation\LinkTarget\Api {
 	interface ILinkTargetService { public function getLink(array $target, array $params = []): string; }
 }
 
-namespace Base3\Settings\Api {
+namespace Base3\CoreFoundation\Settings\Api {
 	interface ISettingsStore {
 		public function get(string $group, string $name, array $default = []): array;
 		public function set(string $group, string $name, array $settings): void;
@@ -60,26 +60,26 @@ namespace Base3\Settings\Api {
 	}
 }
 
-namespace Base3\Translation\Api {
+namespace Base3\CoreFoundation\Translation\Api {
 	interface ITranslation {
 		public function translate(string $set, string $section, string $key, string $fallback = '', array $replacements = []): string;
 	}
 }
 
 namespace {
-	use Base3\Api\IAssetResolver;
-	use Base3\Authorization\Api\IAuthorizationService;
-	use Base3\Authorization\Dto\AuthorizationRequest;
-	use Base3\Authorization\Dto\AuthorizationDecision;
-	use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature;
-	use Base3\LinkTarget\Api\ILinkTargetService;
-	use Base3\Settings\Api\ISettingsStore;
-	use Base3\Translation\Api\ITranslation;
-	use Base3WordPressLab\Integration\GlobalChatbot;
-	use Base3WordPressLab\Service\WordPressChatbotDisplayConfiguration;
-	use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap;
-	use Base3WordPressLab\Test\Support\GlobalChatbotSmokeView;
-	use ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherSettings;
+	use Base3\CoreFoundation\Api\IAssetResolver;
+	use Base3\CoreFoundation\Authorization\Api\IAuthorizationService;
+	use Base3\CoreFoundation\Authorization\Dto\AuthorizationRequest;
+	use Base3\CoreFoundation\Authorization\Dto\AuthorizationDecision;
+	use Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature;
+	use Base3\CoreFoundation\LinkTarget\Api\ILinkTargetService;
+	use Base3\CoreFoundation\Settings\Api\ISettingsStore;
+	use Base3\CoreFoundation\Translation\Api\ITranslation;
+	use Base3\Base3WordPressLab\Integration\GlobalChatbot;
+	use Base3\Base3WordPressLab\Service\WordPressChatbotDisplayConfiguration;
+	use Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap;
+	use Base3\Base3WordPressLab\Test\Support\GlobalChatbotSmokeView;
+	use Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherSettings;
 
 	$hooks = [];
 	$styles = [];

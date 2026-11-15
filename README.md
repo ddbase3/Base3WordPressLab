@@ -7,11 +7,11 @@ the concrete application services. Runtime instances are registered with
 
 ## Discoverable settings
 
-The shared `ClientStack\Display\SettingsDisplay` now discovers
-`UiFoundation\Api\ISettingsTab` contributions through the normal BASE3
+The shared `Base3\ClientStack\Display\SettingsDisplay` now discovers
+`Base3\UiFoundation\Api\ISettingsTab` contributions through the normal BASE3
 classmap. This project no longer holds a static administration catalog.
 The project injects `chatbotConfigDisplayData` for the existing
-`Chatbot\SettingsTab\ChatbotconfigSettingsTab`, keeping `chatbot/default`.
+`Base3\Chatbot\SettingsTab\ChatbotconfigSettingsTab`, keeping `chatbot/default`.
 The FileManager owner uses the same project-owned identity. WordPress
 `manage_options`, BASE3 `IAuthorizationService` decisions and both nonce/CSRF
 checks remain authoritative for protected operations.
@@ -19,11 +19,11 @@ checks remain authoritative for protected operations.
 ## Floating chatbot
 
 The WordPress `wp_footer` and `admin_footer` hooks use
-`ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap`; both
+`Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherBootstrap`; both
 the module, stylesheet and window modes are owned by ClientStack. WordPress
 only supplies the actual chatbot output URL, the `#wpadminbar` dock target and
 the host feature/AJAX checks. A single feature declaration,
-`ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature`, is used.
+`Base3\ClientStack\GlobalChatbotLauncher\GlobalChatbotLauncherFeature`, is used.
 Default audience: `authenticated`. This demo does not preserve the old public
 launcher setting, which can be configured anew.
 

@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Base3WordPressLab\Test\Support;
+namespace Base3\Base3WordPressLab\Test\Support;
 
-use Base3\Api\IMvcView;
+use Base3\CoreFoundation\Api\IMvcView;
 
 /** Loads the real ClientStack launcher language bricks in an isolated smoke test. */
 final class GlobalChatbotSmokeView implements IMvcView {
